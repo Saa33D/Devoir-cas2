@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Produits et Commandes</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <div class="header-container">
+            <h1 class="header-title">
+                <i class="fas fa-cube"></i> Gestion des Produits et Commandes
+            </h1>
+            <p class="header-subtitle">
+                <i class="fas fa-network-wired"></i> Système de Microservices - API Gateway
+            </p>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="stats-container" th:if="${commandes != null and !commandes.isEmpty()}">
+            <div class="stat-card total">
+                <span class="stat-icon"><i class="fas fa-list-alt"></i></span>
+                <div class="stat-value" th:text="${commandes != null ? commandes.size() : 0}">0</div>
+                <div class="stat-label">Total Commandes</div>
+            </div>
+            <div class="stat-card amount">
+                <span class="stat-icon"><i class="fas fa-money-bill-wave"></i></span>
+                <div class="stat-value" th:text="${totalMontant != null ? #numbers.formatDecimal(totalMontant, 1, 2) + ' DHS' : '0.00 DHS'}">0.00 DHS</div>
+                <div class="stat-label">Montant Total</div>
+            </div>
+            <div class="stat-card quantity">
+                <span class="stat-icon"><i class="fas fa-boxes"></i></span>
+                <div class="stat-value" th:text="${totalStock != null ? totalStock : 0}">0</div>
+                <div class="stat-label">Stock Total</div>
+            </div>
+            <div class="stat-card average">
+                <span class="stat-icon"><i class="fas fa-chart-line"></i></span>
+                <div class="stat-value" th:text="${valeurStock != null ? #numbers.formatDecimal(valeurStock, 1, 2) + ' DHS' : '0.00 DHS'}">0.00 DHS</div>
+                <div class="stat-label">Valeur Stock</div>
+            </div>
+        </div>
+
+        <!-- Alertes -->
+        <div th:if="${success}" class="alert alert-success" role="alert">
+            <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> <span th:text="${error}"></span>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="tabs-container">
+            <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="commandes-tab" data-bs-toggle="tab" data-bs-target="#commandes" type="button" role="tab">
+                        <i class="fas fa-shopping-cart"></i> Commandes
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="produits-tab" data-bs-toggle="tab" data-bs-target="#produits" type="button" role="tab">
+                        <i class="fas fa-box"></i> Produits
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="mainTabsContent">
+            <!-- Commandes Tab -->
+            <div class="tab-pane fade show active" id="commandes" role="tabpanel">
+                <div class="content-container">
+                    <div class="content-header">
+                        <h2 class="content-title">
+                            <i class="fas fa-shopping-cart"></i> Liste des Commandes
+                        </h2>
+                        <button type="button" class="btn-action btn-create" data-bs-toggle="modal" data-bs-target="#modalCommandeCreate">
+                            <i class="fas fa-plus"></i> Nouvelle Commande
+                        </button>
+                    </div>
+
+                    <div class="items-grid" th:if="${commandes != null and !commandes.isEmpty()}">
+                        <div class="item-card" th:each="c : ${commandes}">
+                            <div class="item-header">
+                                <span class="item-id">
+                                    <i class="fas fa-hashtag"></i> #<span th:text="${c.id}">1</span>
+                                </span>
+                                <span class="item-badge" th:if="${c.idProduit != null}">
+                                    <i class="fas fa-link"></i> Produit #<span th:text="${c.idProduit}">1</span>
+                                </span>
+                            </div>
+                            
+                            <div class="item-body">
+                                <div class="item-description">
+                                    <i class="fas fa-file-alt" style="color: #667eea; margin-right: 8px;"></i>
+                                    <span th:text="${c.description}">Description</span>
+                                </div>
+                                
+                                <div class="item-details">
+                                    <div class="item-detail">
+                                        <span class="item-detail-label">
+                                            <i class="fas fa-money-bill-wave"></i> Montant
+                                        </span>
+                                        <span class="item-detail-value amount" th:text="${c.montant != null ? #numbers.formatDecimal(c.montant, 1, 2) + ' DHS' : 'N/A'}">
+                                            0.00 DHS
+                                        </span>
+                                    </div>
+                                    <div class="item-detail">
+                                        <span class="item-detail-label">
+                                            <i class="fas fa-boxes"></i> Quantité
+                                        </span>
+                                        <span class="item-detail-value quantity" th:text="${c.quantite != null ? c.quantite : 'N/A'}">
+                                            0
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="item-footer">
+                                <div class="item-date">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span th:text="${c.dateCommande != null ? #temporals.format(c.dateCommande, 'dd/MM/yyyy') : 'N/A'}">
+                                        01/01/2025
+                                    </span>
+                                </div>
+                                <div class="item-actions">
+                                    <button type="button" class="btn-action btn-edit" th:data-id="${c.id}" 
+                                            th:data-description="${c.description}" 
+                                            th:data-montant="${c.montant}" 
+                                            th:data-quantite="${c.quantite}" 
+                                            th:data-id-produit="${c.idProduit}"
+                                            onclick="editCommandeFromButton(this)">
+                                        <i class="fas fa-edit"></i> Modifier
+                                    </button>
+                                    <form th:action="@{/commandes/{id}/delete(id=${c.id})}" method="post" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette commande ?');">
+                                        <button type="submit" class="btn-action btn-delete">
+                                            <i class="fas fa-trash"></i> Supprimer
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="empty-state" th:if="${commandes == null or commandes.isEmpty()}">
+                        <div class="empty-icon">
+                            <i class="fas fa-inbox"></i>
+                        </div>
+                        <div class="empty-message">Aucune commande disponible</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Produits Tab -->
+            <div class="tab-pane fade" id="produits" role="tabpanel">
+                <div class="content-container">
+                    <div class="content-header">
+                        <h2 class="content-title">
+                            <i class="fas fa-box"></i> Liste des Produits
+                        </h2>
+                        <button type="button" class="btn-action btn-create" data-bs-toggle="modal" data-bs-target="#modalProduitCreate">
+                            <i class="fas fa-plus"></i> Nouveau Produit
+                        </button>
+                    </div>
+
+                    <div class="items-grid" th:if="${produits != null and !produits.isEmpty()}">
+                        <div class="item-card" th:each="p : ${produits}">
+                            <div class="item-header">
+                                <span class="item-id">
+                                    <i class="fas fa-hashtag"></i> #<span th:text="${p.id}">1</span>
+                                </span>
+                            </div>
+                            
+                            <div class="item-body">
+                                <div class="item-description">
+                                    <i class="fas fa-box" style="color: #667eea; margin-right: 8px;"></i>
+                                    <span th:text="${p.description}">Description</span>
+                                </div>
+                                
+                                <div class="item-details">
+                                    <div class="item-detail">
+                                        <span class="item-detail-label">
+                                            <i class="fas fa-money-bill-wave"></i> Prix Unitaire
+                                        </span>
+                                        <span class="item-detail-value amount" th:text="${p.montant != null ? #numbers.formatDecimal(p.montant, 1, 2) + ' DHS' : 'N/A'}">
+                                            0.00 DHS
+                                        </span>
+                                    </div>
+                                    <div class="item-detail">
+                                        <span class="item-detail-label">
+                                            <i class="fas fa-boxes"></i> Stock
+                                        </span>
+                                        <span class="item-detail-value quantity" th:text="${p.quantite != null ? p.quantite : 'N/A'}">
+                                            0
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="item-footer">
+                                <div class="item-actions" style="width: 100%; justify-content: space-between;">
+                                    <button type="button" class="btn-action btn-edit" 
+                                            th:data-id="${p.id}" 
+                                            th:data-description="${p.description}" 
+                                            th:data-montant="${p.montant}" 
+                                            th:data-quantite="${p.quantite}"
+                                            onclick="editProduitFromButton(this)">
+                                        <i class="fas fa-edit"></i> Modifier
+                                    </button>
+                                    <form th:action="@{/produits/{id}/delete(id=${p.id})}" method="post" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce produit ?');">
+                                        <button type="submit" class="btn-action btn-delete">
+                                            <i class="fas fa-trash"></i> Supprimer
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="empty-state" th:if="${produits == null or produits.isEmpty()}">
+                        <div class="empty-icon">
+                            <i class="fas fa-inbox"></i>
+                        </div>
+                        <div class="empty-message">Aucun produit disponible</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Création Commande -->
+    <div class="modal fade" id="modalCommandeCreate" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-plus"></i> Nouvelle Commande</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/commandes}" method="post">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-label"><i class="fas fa-file-alt"></i> Description</label>
+                            <input type="text" class="form-control" name="description" required placeholder="Ex: Commande de matériel">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><i class="fas fa-money-bill-wave"></i> Montant (DHS)</label>
+                            <input type="number" step="0.01" min="0.01" class="form-control" name="montant" required placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><i class="fas fa-boxes"></i> Quantité</label>
+                            <input type="number" min="1" class="form-control" name="quantite" required placeholder="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><i class="fas fa-box"></i> Produit</label>
+                            <select class="form-control" name="idProduit" id="produitSelectCreate">
+                                <option value="">-- Sélectionner un produit (optionnel) --</option>
+                                <option th:each="p : ${produits}" 
+                                        th:value="${p.id}" 
+                                        th:text="${p.description + ' (Stock: ' + p.quantite + ', Prix: ' + #numbers.formatDecimal(p.montant, 1, 2) + ' DHS)'}">
+                                    Produit
+                                </option>
+                            </select>
+                            <small class="form-text text-muted" th:if="${produits == null or produits.isEmpty()}">
+                                <i class="fas fa-exclamation-triangle"></i> Aucun produit disponible. Créez d'abord un produit.
+                            </small>
+                        </div>
+                        <div class="alert alert-info" style="margin-top: 15px; padding: 10px;">
+                            <i class="fas fa-info-circle"></i> <strong>Note :</strong> La date de commande sera automatiquement définie à la date du jour.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-cancel" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn-submit">Créer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Modification Commande -->
+    <div class="modal fade" id="modalCommandeEdit" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-edit"></i> Modifier Commande</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="formCommandeEdit" method="post">
+                    <div class="modal-body">
+                        <input type="hidden" name="id" id="commandeId">
+                        <div class="form-group">
+                            <label class="form-label"><i class="fas fa-file-alt"></i> Description</label>
+                            <input type="text" class="form-control" name="description" id="commandeDescription" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><i class="fas fa-money-bill-wave"></i> Montant (DHS)</label>
+                            <input type="number" step="0.01" min="0.01" class="form-control" name="montant" id="commandeMontant" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><i class="fas fa-boxes"></i> Quantité</label>
+                            <input type="number" min="1" class="form-control" name="quantite" id="commandeQuantite" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><i class="fas fa-box"></i> Produit</label>
+                            <select class="form-control" name="idProduit" id="commandeIdProduitSelect">
+                                <option value="">-- Sélectionner un produit (optionnel) --</option>
+                                <option th:each="p : ${produits}" 
+                                        th:value="${p.id}" 
+                                        th:text="${p.description + ' (Stock: ' + p.quantite + ', Prix: ' + #numbers.formatDecimal(p.montant, 1, 2) + ' DHS)'}">
+                                    Produit
+                                </option>
+                            </select>
+                        </div>
+                        <div class="alert alert-info" style="margin-top: 15px; padding: 10px;">
+                            <i class="fas fa-info-circle"></i> <strong>Note :</strong> La date de commande sera automatiquement mise à jour si non spécifiée.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-cancel" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn-submit">Modifier</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Création Produit -->
+    <div class="modal fade" id="modalProduitCreate" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-plus"></i> Nouveau Produit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/produits}" method="post">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <input type="text" class="form-control" name="description" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Prix Unitaire (DHS)</label>
+                            <input type="number" step="0.01" class="form-control" name="montant" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Quantité en Stock</label>
+                            <input type="number" class="form-control" name="quantite" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-cancel" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn-submit">Créer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Modification Produit -->
+    <div class="modal fade" id="modalProduitEdit" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-edit"></i> Modifier Produit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="formProduitEdit" method="post">
+                    <div class="modal-body">
+                        <input type="hidden" name="id" id="produitId">
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <input type="text" class="form-control" name="description" id="produitDescription" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Prix Unitaire (DHS)</label>
+                            <input type="number" step="0.01" class="form-control" name="montant" id="produitMontant" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Quantité en Stock</label>
+                            <input type="number" class="form-control" name="quantite" id="produitQuantite" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-cancel" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn-submit">Modifier</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Fonction pour éditer une commande depuis le bouton
+        function editCommandeFromButton(button) {
+            const id = button.getAttribute('data-id');
+            const description = button.getAttribute('data-description') || '';
+            const montant = button.getAttribute('data-montant') || '';
+            const quantite = button.getAttribute('data-quantite') || '';
+            const idProduit = button.getAttribute('data-id-produit') || '';
+            
+            document.getElementById('commandeId').value = id;
+            document.getElementById('commandeDescription').value = description;
+            document.getElementById('commandeMontant').value = montant;
+            document.getElementById('commandeQuantite').value = quantite;
+            
+            // Sélectionner le produit dans le select
+            const produitSelect = document.getElementById('commandeIdProduitSelect');
+            if (produitSelect && idProduit) {
+                produitSelect.value = idProduit;
+            } else if (produitSelect) {
+                produitSelect.value = '';
+            }
+            
+            document.getElementById('formCommandeEdit').action = '/commandes/' + id;
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalCommandeEdit'));
+            modal.show();
+        }
+
+        // Fonction pour éditer un produit depuis le bouton
+        function editProduitFromButton(button) {
+            const id = button.getAttribute('data-id');
+            const description = button.getAttribute('data-description') || '';
+            const montant = button.getAttribute('data-montant') || '';
+            const quantite = button.getAttribute('data-quantite') || '';
+            
+            document.getElementById('produitId').value = id;
+            document.getElementById('produitDescription').value = description;
+            document.getElementById('produitMontant').value = montant;
+            document.getElementById('produitQuantite').value = quantite;
+            document.getElementById('formProduitEdit').action = '/produits/' + id;
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalProduitEdit'));
+            modal.show();
+        }
+
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
+</body>
+</html>
